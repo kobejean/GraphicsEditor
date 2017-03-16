@@ -8,7 +8,7 @@ public class Shape {
 	public Color fillColor = Color.WHITE;
 	public Color outlineColor = Color.BLACK;
 	public double border = 0.005;
-	
+
 	public Shape(Type type, ArrayList<Coordinate> coordinates, Color fillColor, Color outlineColor, double border){
 		this.type = type;
 		this.coordinates = coordinates;
@@ -16,16 +16,16 @@ public class Shape {
 		this.outlineColor = outlineColor;
 		this.border = border;
 	}
-	
+
 	public Shape(Type type, ArrayList<Coordinate> coordinates){
 		this.type = type;
 		this.coordinates = coordinates;
 	}
-	
+
 	public Shape(Type type){
 		this.type = type;
 	}
-	
+
 	public Shape(Shape another){
 		this.type = another.type;
 		this.coordinates = new ArrayList<Coordinate>(another.coordinates);
@@ -33,7 +33,7 @@ public class Shape {
 		this.outlineColor = new Color(another.outlineColor.getRGB());
 		this.border = another.border;
 	}
-	
+
 	public Shape(){
 	}
 
@@ -47,16 +47,16 @@ public class Shape {
 			break;
 		}
 	}
-	
+
 	private void drawCircle(){
 		if (this.coordinates.size() != 2){
 			return;
 		}
-		
+
 		// save settings
 		Color previousPenColor = StdDraw.getPenColor();
 		double previousPenRadius = StdDraw.getPenRadius();
-		
+
 		// calculate coordinates
 		double x = this.coordinates.get(0).x;
 		double y = this.coordinates.get(0).y;
@@ -71,21 +71,21 @@ public class Shape {
 		StdDraw.setPenRadius(border);
 		StdDraw.setPenColor(outlineColor);
 		StdDraw.circle(x, y, r);
-		
+
 		// set back to original settings
 		StdDraw.setPenRadius(previousPenRadius);
 		StdDraw.setPenColor(previousPenColor);
 	}
-	
+
 	private void drawPolygon(){
 		if (this.coordinates.size() < 2){
 			return;
 		}
-		
+
 		// save settings
 		Color previousPenColor = StdDraw.getPenColor();
 		double previousPenRadius = StdDraw.getPenRadius();
-		
+
 		// calculate coordinates
 		double[] x = new double[this.coordinates.size()];
 		double[] y = new double[this.coordinates.size()];
@@ -101,12 +101,12 @@ public class Shape {
 		StdDraw.setPenRadius(border);
 		StdDraw.setPenColor(outlineColor);
 		StdDraw.polygon(x, y);
-		
+
 		// set back to original settings
 		StdDraw.setPenRadius(previousPenRadius);
 		StdDraw.setPenColor(previousPenColor);
 	}
-	
+
 	public void printCode(){
 		switch (this.type){
 		case POLYGON:
@@ -117,38 +117,30 @@ public class Shape {
 			break;
 		}
 	}
-	
+
 	private void printCircleCode(){
 		// calculate coordinates
 		double x = this.coordinates.get(0).x;
 		double y = this.coordinates.get(0).y;
-		double x2 = this.coordinates.get(0).x;
-		double y2 = this.coordinates.get(0).y;
-		double r = Math.sqrt(x2*x2+y2*y2);
+		double dx = this.coordinates.get(1).x - x;
+		double dy = this.coordinates.get(1).y - y;
+		double r = Math.sqrt(dx*dx+dy*dy);
 
-		// draw filled polygon
-		StdDraw.setPenColor(fillColor);
-		StdDraw.filledCircle(x, y, r);
-		// draw outline polygon
-		StdDraw.setPenRadius(border);
-		StdDraw.setPenColor(outlineColor);
-		StdDraw.circle(x, y, r);
-		
 		String hexFill = "#"+Integer.toHexString(fillColor.getRGB()).substring(2).toUpperCase();
 		System.out.println("StdDraw.setPenColor(Color.decode(\""+hexFill+"\"));");
 		System.out.println("StdDraw.filledCircle("+x+", "+y+", "+r+");");
-		
+
 		String hexOut = "#"+Integer.toHexString(outlineColor.getRGB()).substring(2).toUpperCase();
 		System.out.println("StdDraw.setPenRadius("+border+");");
 		System.out.println("StdDraw.setPenColor(Color.decode(\""+hexOut+"\"));");
 		System.out.println("StdDraw.circle("+x+", "+y+", "+r+");");
 	}
-	
+
 	private void printPolygonCode(){
 		if (coordinates.size() < 2){
 			return;
 		}
-		
+
 		// calculate coordinates
 		double[] x = new double[coordinates.size()];
 		double[] y = new double[coordinates.size()];
@@ -159,14 +151,14 @@ public class Shape {
 		}
 		String xString = "new double[]"+Arrays.toString(x).replace("[", "{").replace("]", "}");
 		String yString = "new double[]"+Arrays.toString(y).replace("[", "{").replace("]", "}");
-		
+
 		int r = fillColor.getRed();
 		int g = fillColor.getGreen();
 		int b = fillColor.getBlue();
 		String hex = String.format("#%02X%02X%02X", r, g, b);
 		System.out.println("StdDraw.setPenColor(Color.decode(\""+hex+"\"));");
 		System.out.println("StdDraw.filledPolygon("+xString+", "+yString+");");
-		
+
 		r = outlineColor.getRed();
 		g = outlineColor.getGreen();
 		b = outlineColor.getBlue();
@@ -175,7 +167,7 @@ public class Shape {
 		System.out.println("StdDraw.setPenColor(Color.decode(\""+hex+"\"));");
 		System.out.println("StdDraw.polygon("+xString+", "+yString+");");
 	}
-	
+
 	/******************************************************************
 	 * Shape type enumeration                                         *
 	 ******************************************************************/
