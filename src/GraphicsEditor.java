@@ -4,6 +4,10 @@ import java.util.Scanner;
 import javax.swing.JOptionPane;
 import java.util.ArrayList;
 
+/*******************************************************************************
+*					      - GRAPHICS EDITOR CLASS -							   *
+*******************************************************************************/
+
 public class GraphicsEditor {
 	public static Graphic graphic = new Graphic();
 
@@ -16,8 +20,14 @@ public class GraphicsEditor {
 	private static boolean isKeyPressed = false;
 	private static Coordinate mouseCoord = new Coordinate(0,0);
 	private static Shape currentShape = new Shape();
-	private static Color shapeColor = currentShape.fillColor;
-	private static double border = currentShape.border;
+	private static Shape background = new Shape();
+	private static Color fillColor = currentShape.fillColor;
+	private static Color outlineColor = currentShape.outlineColor;
+	private static double outlineWidth = currentShape.outlineWidth;
+
+	/***************************************************************************
+	*						     - MAIN METHOD -							   *
+	***************************************************************************/
 
 	public static void main(String args[]){
 	    int width = 600, height = 600;
@@ -36,7 +46,17 @@ public class GraphicsEditor {
 	    StdDraw.setPenRadius(.001);
 	    StdDraw.setPenColor(StdDraw.BOOK_BLUE);
 
-		keyPressed('H'); // help menu
+		// help menu
+		help();
+
+		// set background
+		background.outlineWidth = 0;
+		background.type = Shape.Type.POLYGON;
+		background.coordinates.add(new Coordinate(0,0));
+		background.coordinates.add(new Coordinate(width,0));
+		background.coordinates.add(new Coordinate(width,height));
+		background.coordinates.add(new Coordinate(0,height));
+		graphic.shapes.add(background);
 
 	    // program loop
 	    while (true){
@@ -44,7 +64,7 @@ public class GraphicsEditor {
 			isMousePressed = StdDraw.mousePressed();
 	    	isKeyPressed = StdDraw.hasNextKeyTyped();
 	    	if (isKeyPressed){
-	    		char currentKey = Character.toUpperCase(StdDraw.nextKeyTyped());
+	    		char currentKey = StdDraw.nextKeyTyped();
 				keyPressed(currentKey);
 	    	}
 
@@ -64,93 +84,198 @@ public class GraphicsEditor {
 	    }
 	}
 
+	/***************************************************************************
+	*						      - USER CONTROLS -							   *
+	***************************************************************************/
+
 	private static void keyPressed(char currentKey){
+		currentKey = Character.toUpperCase(currentKey);
 		switch (currentKey){
-		case 'B':
-			String borderString = JOptionPane.showInputDialog(null, "Type in border width:",border);
-			border = Double.parseDouble(borderString);
-			break;
-		case 'C':
-			String hex = "#"+Integer.toHexString(shapeColor.getRGB()).substring(2).toUpperCase();
-			String colorString = JOptionPane.showInputDialog(null, "Type in fill color:", hex);
-			shapeColor = Color.decode(colorString);
-			break;
-		case 'E':
-			isEditing = !isEditing;
-			break;
-		case 'S':
-			String shapeString = JOptionPane.showInputDialog(null, "Type in SP, CP, or C:");
-			shapeString = shapeString.toUpperCase();
-			switch (shapeString){
-			case "SP":
-				mode = Mode.STRAIGHT_POLY;
+			case 'B': setBackgroundColor();
 				break;
-			case "CP":
-				mode = Mode.CURVED_POLY;
+			case 'L': setOutlineWidth();
 				break;
-			case "C":
-				mode = Mode.CIRCLE;
+			case 'F': setFillColor();
 				break;
-			default:
+			case 'O': setOutlineColor();
 				break;
+			case 'E': toggleEditing();
+				break;
+			case 'S': changeShape();
+				break;
+			case 'P': printCode();
+				break;
+			case 'H': help();
+				break;
+			default: // other keys that don't have typable chars
+				if (StdDraw.isKeyPressed(KeyEvent.VK_BACK_SPACE)){
+					delete();
+				}
+				break;
+		}
+	}
+
+	public static void setBackgroundColor(){
+		String hex = "#"+Integer.toHexString(background.fillColor.getRGB()).substring(2).toUpperCase();
+		String colorString = JOptionPane.showInputDialog(null, "Type in background color:", hex);
+		try {
+			background.fillColor = Color.decode(colorString);
+		}catch(Exception e){
+			if (colorString != null){ // cancel was not pressed
+				String message = "Background color could not be set. Would you like to try again?";
+				String title = "Could not set background color";
+				int reply = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
+				if (reply == JOptionPane.YES_OPTION){
+					setBackgroundColor();
+				}
 			}
+		}
+		StdDraw.clear();
+		graphic.draw();
+	}
+
+	public static void setOutlineWidth(){
+		String outlineString = JOptionPane.showInputDialog(null, "Type in outline width:", outlineWidth);
+		try {
+			outlineWidth = Double.parseDouble(outlineString);
+		}catch(Exception e){
+			if (outlineString != null){ // cancel was not pressed
+				String message = "Border could not be set. Would you like to try again?";
+				String title = "Could not set outline width";
+				int reply = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
+				if (reply == JOptionPane.YES_OPTION){
+					setOutlineWidth();
+				}
+			}
+		}
+	}
+
+	public static void setFillColor(){
+		String hex = "#"+Integer.toHexString(fillColor.getRGB()).substring(2).toUpperCase();
+		String colorString = JOptionPane.showInputDialog(null, "Type in fill color:", hex);
+		try {
+			fillColor = Color.decode(colorString);
+		}catch(Exception e){
+			if (colorString != null){ // cancel was not pressed
+				String message = "Fill color could not be set. Would you like to try again?";
+				String title = "Could not set fill color";
+				int reply = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
+				if (reply == JOptionPane.YES_OPTION){
+					setFillColor();
+				}
+			}
+		}
+	}
+
+	public static void setOutlineColor(){
+		String hex = "#"+Integer.toHexString(outlineColor.getRGB()).substring(2).toUpperCase();
+		String colorString = JOptionPane.showInputDialog(null, "Type in outline color:", hex);
+		try {
+			outlineColor = Color.decode(colorString);
+		}catch(Exception e){
+			if (colorString != null){ // cancel was not pressed
+				String message = "Outline color could not be set. Would you like to try again?";
+				String title = "Could not set outline color";
+				int reply = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
+				if (reply == JOptionPane.YES_OPTION){
+					setOutlineColor();
+				}
+			}
+		}
+	}
+
+	public static void toggleEditing(){
+		isEditing = !isEditing;
+		String message = "EDITING: "+ Boolean.toString(isEditing).toUpperCase();
+		System.out.println(message);
+	}
+
+	public static void changeShape(){
+		String input = JOptionPane.showInputDialog(null, "Type in SP, CP, or C:");
+		if (input == null) {
+			return; // cancel
+		}
+		String shapeString = input.toUpperCase();
+		switch (shapeString){
+		case "SP":
+			mode = Mode.STRAIGHT_POLY;
 			break;
-		case 'P':
-			graphic.printCode();
+		case "CP":
+			mode = Mode.CURVED_POLY;
 			break;
-		case 'H':
-			System.out.println("+------------------HELP------------------+");
-			System.out.println("|  (B) Set border width                  |");
-			System.out.println("|  (D) Set fill color                    |");
-			System.out.println("|  (E) Toggle editing                    |");
-			System.out.println("|  (S) Change shape type                 |");
-			System.out.println("|  (P) Print graphic code                |");
-			System.out.println("|  (H) Help                              |");
-			System.out.println("+----------------------------------------+");
+		case "C":
+			mode = Mode.CIRCLE;
 			break;
 		default:
-			if (StdDraw.isKeyPressed(KeyEvent.VK_BACK_SPACE)){
-				// delete shape/point
-				if (graphic.shapes.size() > 0){
-					Shape lastShape = graphic.shapes.get(graphic.shapes.size()-1);
-					ArrayList<Coordinate> coords = lastShape.coordinates;
-					if (isEditing && coords.size() > 1){
-						coords.remove(coords.size()-1);
-					}else{
-						graphic.shapes.remove(lastShape);
-					}
-				}
-				StdDraw.clear();
-				graphic.draw();
-
+			String message = "That was not a valid input. Would you like to try again?";
+			String title = "Not valid input";
+			int reply = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
+			if (reply == JOptionPane.YES_OPTION){
+				changeShape();
 			}
 			break;
 		}
 	}
 
+	public static void printCode(){
+		System.out.println("+------------- GRAPHIC CODE -------------+");
+		graphic.printCode();
+		System.out.println("+----------------------------------------+");
+	}
+
+	public static void help(){
+		System.out.println("+------------------HELP------------------+");
+		System.out.println("|  (B) Set background color              |");
+		System.out.println("|  (E) Toggle editing                    |");
+		System.out.println("|  (F) Set fill color                    |");
+		System.out.println("|  (L) Set outline width                 |");
+		System.out.println("|  (O) Set outline color                 |");
+		System.out.println("|  (P) Print graphic code                |");
+		System.out.println("|  (S) Change shape type                 |");
+		System.out.println("|  (H) Help                              |");
+		System.out.println("+----------------------------------------+");
+	}
+
+	public static void delete(){
+		if (graphic.shapes.size() > 1){ // first shape is background
+			Shape lastShape = graphic.shapes.get(graphic.shapes.size()-1);
+			ArrayList<Coordinate> coords = lastShape.coordinates;
+			if (isEditing && coords.size() > 1){
+				coords.remove(coords.size()-1);
+			}else{
+				graphic.shapes.remove(lastShape);
+			}
+		}
+		StdDraw.clear();
+		graphic.draw();
+	}
+
+	/***************************************************************************
+	*						      - PLOT METHODS -							   *
+	***************************************************************************/
+
 	private static void plotCurvedPolygon(){
-		if (isMousePressed && isFirstPoint){
-			isFirstPoint = false;
+		if (!wasMousePressed && isMousePressed){
+			// first mouse press
 			currentShape = new Shape(Shape.Type.POLYGON);
 			currentShape.coordinates.add(mouseCoord);
-			currentShape.fillColor = shapeColor;
-			currentShape.border = border;
-		}else if (wasMousePressed) {
+			setCurrentShapeProperties();
+			isFirstPoint = false;
+		}else if (wasMousePressed && isMousePressed) {
+			// dragging
+			ArrayList<Coordinate> coords = currentShape.coordinates;
 			currentShape.coordinates.add(mouseCoord);
 
+			// draw preview line
 			double lastX = currentShape.coordinates.get(currentShape.coordinates.size()-2).x;
 			double lastY = currentShape.coordinates.get(currentShape.coordinates.size()-2).y;
-
-			// draw line
 			StdDraw.line(lastX, lastY, mouseCoord.x, mouseCoord.y);
-
-			// if no longer dragging
-			if (!isMousePressed){
-				graphic.shapes.add(new Shape(currentShape));
-				StdDraw.clear();
-				graphic.draw();
-				isFirstPoint = true;
-			}
+		}else if (wasMousePressed && !isMousePressed){
+			// first mouse unpress
+			graphic.shapes.add(new Shape(currentShape));
+			StdDraw.clear();
+			graphic.draw();
+			isFirstPoint = true;
 		}
 	}
 
@@ -161,8 +286,7 @@ public class GraphicsEditor {
 
 				currentShape = new Shape(Shape.Type.POLYGON);
 				currentShape.coordinates.add(mouseCoord);
-				currentShape.fillColor = shapeColor;
-				currentShape.border = border;
+				setCurrentShapeProperties();
 			}else{
 				currentShape.coordinates.add(mouseCoord);
 				double lastX = currentShape.coordinates.get(currentShape.coordinates.size()-2).x;
@@ -173,6 +297,7 @@ public class GraphicsEditor {
 		}
 
 		if (StdDraw.isKeyPressed(KeyEvent.VK_ENTER) && isKeyPressed){
+			// enter key pressed
 			isFirstPoint = true;
 			graphic.shapes.add(new Shape(currentShape));
 			StdDraw.clear();
@@ -207,9 +332,8 @@ public class GraphicsEditor {
 		if (wasMousePressed && !isMousePressed){ // unclick
 			if (isFirstPoint){
 				currentShape = new Shape(Shape.Type.CIRCLE);
-				currentShape.fillColor = shapeColor;
-				currentShape.border = border;
 				currentShape.coordinates.add(new Coordinate(mouseCoord.x,mouseCoord.y));
+				setCurrentShapeProperties();
 				isFirstPoint = false;
 			}else{
 				currentShape.coordinates.add(new Coordinate(mouseCoord.x,mouseCoord.y));
@@ -231,6 +355,16 @@ public class GraphicsEditor {
 			StdDraw.circle(x, y, r);
 		}
 	}
+
+	private static void setCurrentShapeProperties(){
+		currentShape.fillColor = fillColor;
+		currentShape.outlineColor = outlineColor;
+		currentShape.outlineWidth = outlineWidth;
+	}
+
+	/***************************************************************************
+	*						   - MODE ENUMERATION -							   *
+	***************************************************************************/
 
 	public enum Mode {
 	    CURVED_POLY, STRAIGHT_POLY, CIRCLE
