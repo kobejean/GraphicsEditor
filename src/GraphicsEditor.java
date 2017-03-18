@@ -36,10 +36,9 @@ public class GraphicsEditor {
 	    //Set the drawing scale to be 1 pixel per coordinate
 	    StdDraw.setXscale(0, width);
 	    StdDraw.setYscale(0, height);
-
+		
 	    // control when to show to save running time
 	    StdDraw.enableDoubleBuffering();
-
 	    int short_delay = 20;
 
 	    // temporary draw settings
