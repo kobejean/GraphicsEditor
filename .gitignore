@@ -6,3 +6,7 @@ compile_run.command
 compile.command
 
 run.command
+
+.classpath
+
+.project
